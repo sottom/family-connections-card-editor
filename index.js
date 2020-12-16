@@ -7,7 +7,6 @@ function getRoundedCanvas(sourceCanvas) {
     canvas.width = width;
     canvas.height = height;
     context.imageSmoothingEnabled = true;
-    console.log(width, height)
     context.drawImage(sourceCanvas, 0, 0, width, height);
     context.globalCompositeOperation = 'destination-in';
     context.beginPath();
@@ -44,19 +43,19 @@ window.addEventListener('DOMContentLoaded', function () {
         croppedCanvas = cropper.getCroppedCanvas();
 
         // Round
-        console.log(croppedCanvas)
         roundedCanvas = getRoundedCanvas(croppedCanvas);
+        previewCanvas(roundedCanvas)
 
-        // Show
-        roundedImage = document.createElement('img');
-        roundedImage.src = roundedCanvas.toDataURL()
-        result.innerHTML = '';
-        result.appendChild(roundedImage);
+
+        // // Show
+        // roundedImage = document.createElement('img');
+        // roundedImage.src = roundedCanvas.toDataURL()
+        // result.innerHTML = '';
+        // result.appendChild(roundedImage);
     };
 
+    // TODO: create a new cropper for the circle
     var image = document.getElementById('image');
-    var button = document.getElementById('button');
-    var result = document.getElementById('result');
     var previews = document.querySelectorAll('.preview');
     var croppable = false;
     var cropper = new Cropper(image, {
@@ -73,49 +72,14 @@ window.addEventListener('DOMContentLoaded', function () {
         toggleDragModeOnDblclick: false,
         ready: function () {
             croppable = true;
-            var clone = this.cloneNode();
-
-            clone.className = '';
-            clone.style.cssText = (
-                'display: block;' +
-                'width: 100%;' +
-                'min-width: 0;' +
-                'min-height: 0;' +
-                'max-width: none;' +
-                'max-height: none;'
-            );
-
-            each(previews, function (elem) {
-                elem.appendChild(clone.cloneNode());
-            });
-            previewReady = true;
         },
         crop: function (event) {
-            if (!previewReady) {
-                return;
-            }
-
-            var data = event.detail;
-            var cropper = this.cropper;
-            var imageData = cropper.getImageData();
-            var previewAspectRatio = 1 / 1.2568;
-
-            each(previews, function (elem) {
-                var previewImage = elem.getElementsByTagName('img').item(0);
-                var previewWidth = elem.offsetWidth;
-                var previewHeight = previewWidth / previewAspectRatio;
-                var imageScaledRatio = data.width / previewWidth;
-
-                elem.style.height = previewHeight + 'px';
-                elem.style.borderRadius = "50%";
-                previewImage.style.width = imageData.naturalWidth / imageScaledRatio + 'px';
-                previewImage.style.height = imageData.naturalHeight / imageScaledRatio + 'px';
-                previewImage.style.marginLeft = -data.x / imageScaledRatio + 'px';
-                previewImage.style.marginTop = -data.y / imageScaledRatio + 'px';
-            });
         },
     });
-    button.addEventListener('click', e => {
+    setInterval(() => {
         addImage()
-    })
+    }, 1000)
+    // button.addEventListener('click', e => {
+    //     addImage()
+    // })
 });
