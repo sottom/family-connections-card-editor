@@ -1,14 +1,6 @@
-var cropped1, cropped2;
 window.addEventListener('DOMContentLoaded', function () {
-    // TODO: create a new cropper for the circle
-    createCropper('image', 1 / 1.2568).then(cropper1 => {
-        cropped1 = getCrop(cropper1)
-        previewCanvas(cropped1[0], cropped1[1])
-        document.querySelector('#button').addEventListener('click', e => {
-            cropped1 = getCrop(cropper1)
-            previewCanvas(cropped1[0], cropped1[1])
-        })
-    })
+    referenceCanvas()
+
     // let cropper2 = createCropper('image2', 1)
 
     // setInterval(() => {
@@ -29,7 +21,7 @@ function getRoundedCanvas(sourceCanvas, type) {
     context.drawImage(sourceCanvas, 0, 0, width, height);
     context.globalCompositeOperation = 'destination-in';
     context.beginPath();
-    if (type == 'circle'){
+    if (type == 'circle') {
         context.arc(width / 2, height / 2.25, width / 2, 0, 2 * Math.PI, true);
     } else {
         context.ellipse(width / 2, height / 2, width / 2, height / 2, 0, 0, 2 * Math.PI, true);
@@ -57,6 +49,7 @@ function createCropper(id, aspectRatio) {
             aspectRatio,
             viewMode: 1,
             dragMode: 'move',
+            responsive: true,
             autoCropArea: 0.65,
             restore: false,
             guides: false,
@@ -74,6 +67,4 @@ function createCropper(id, aspectRatio) {
         });
     })
 }
-
-
 

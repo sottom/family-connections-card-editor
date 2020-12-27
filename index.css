@@ -1,42 +1,18 @@
-.container {
-    margin: 20px auto;
-    max-width: 960px;
+.img-container {
+  /* Never limit the container height here */
+  max-width: 100%;
+  height: 100%;
 }
 
-img {
-    max-width: 100%;
-}
-
-.row,
-.preview {
-    overflow: hidden;
-}
-
-.col {
-    float: left;
-}
-
-.col-6 {
-    width: 50%;
-}
-
-.col-3 {
-    width: 25%;
-}
-
-.col-2 {
-    width: 16.7%;
-}
-
-.col-1 {
-    width: 8.3%;
+.img-container img {
+  /* This is important */
+  width: 100%;
 }
 
 .cropper-view-box,
 .cropper-face {
     border-radius: 50%;
 }
-
 
 canvas {
     image-rendering: optimizeSpeed;
@@ -45,4 +21,7 @@ canvas {
     image-rendering: -o-crisp-edges;
     image-rendering: crisp-edges;
     -ms-interpolation-mode: nearest-neighbor;
+
+    width: 100%;
+    height: auto;
 }

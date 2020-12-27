@@ -3,37 +3,43 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Document</title>
+
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
+
+
     <link href="node_modules/cropperjs/dist/cropper.css" rel="stylesheet">
     <link href="index.css" rel="stylesheet">
     <script src="node_modules/cropperjs/dist/cropper.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <!-- <div class="row">
-            <div class="col col-3">
-                <img id="image2" src="img/Family-Arizona-2019.jpg" alt="Picture">
-                <button id="button2">Crop2</button>
-            </div>
-        </div> -->
+    <div class="container-fluid">
         <div class="row">
-            <div class="col col-3">
-                <img id="image" src="img/Family-Arizona-2019.jpg" alt="Picture">
-                <button id="button">Crop</button>
-            </div>
-            <div class="col col-6">
+            <div class="col">
                 <canvas id="canvas"></canvas>
-                <!-- <img src="img/blank_card.png" style="position: absolute; width: 500px" />
-                <div class="preview"></div> -->
             </div>
         </div>
     </div>
-    <div id="result"></div>
+
+
+    <!-- Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+    <script src="utils.js"></script>
+    <script src="index.js"></script>
+    <script src="curve.js"></script>
 </body>
 
-<script src="index.js"></script>
-<script src="curve.js"></script>
 
 </html>
