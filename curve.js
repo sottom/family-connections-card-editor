@@ -1,3 +1,4 @@
+let croppers = {};
 let reference_canvas = document.querySelector("#canvas");
 let reference_context = reference_canvas.getContext("2d");
 
@@ -88,22 +89,23 @@ reference_canvas.addEventListener('click', (e) => {
             $('#' + getOrCreateModalId(frame.id)).modal('show');
             document.querySelector(`#imgInp${clickedFrame}`).addEventListener('change', e => {
                 document.querySelector(`#cropperImg${clickedFrame}`).src = "#";
+                console.log(clickedFrame)
                 if (e.target.files && e.target.files[0]) {
                     var reader = new FileReader();
                     reader.onload = function (event) {
 
                         document.querySelector(`#cropperImg${clickedFrame}`).src = event.target.result;
-                        createCropper(`cropperImg${clickedFrame}`, 1 / 1.2568).then(cropper1 => {
-                            let cropped1 = getCrop(cropper1)
-                            cardPreview(clickedFrame, cropped1[0], cropped1[1])
-                            console.log(clickedFrame)
-                            document.querySelector(`#cropButton${clickedFrame}`).addEventListener('click', e => {
-                                cropped1 = getCrop(cropper1)
-                                console.log(clickedFrame)
-                                cardPreview(clickedFrame, cropped1[0], cropped1[1])
-                                addImgToReferenceSheet(cropped1[0])
+                        if (clickedFrame in croppers) {
+                            let cropper = croppers[clickedFrame];
+                            cropper.replace(event.target.result);
+                            getCardPreview(cropper)
+                        }
+                        else {
+                            createCropper(`cropperImg${clickedFrame}`, 1 / 1.2568).then(cropper => {
+                                croppers[clickedFrame] = cropper;
+                                getCardPreview(cropper)
                             })
-                        })
+                        }
 
                     }
                     reader.readAsDataURL(e.target.files[0]);
@@ -331,4 +333,16 @@ function modalHtml(id) {
             </div>
         </div>
         `
+}
+
+function getCardPreview(cropper) {
+    let cropped = getCrop(cropper)
+    cardPreview(clickedFrame, cropped[0], cropped[1])
+    document.querySelector(`#cropButton${clickedFrame}`).addEventListener('click', e => {
+        cropped = getCrop(cropper)
+        console.log(clickedFrame)
+        cardPreview(clickedFrame, cropped[0], cropped[1])
+        addImgToReferenceSheet(cropped[0])
+    })
+
 }
