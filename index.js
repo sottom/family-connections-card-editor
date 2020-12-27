@@ -1,3 +1,21 @@
+////////////////////////////////////////////
+// TODOs
+////////////////////////////////////////////
+// - Add "Click Me" text or blank image to blank portraits
+// - Maybe add names to each frame (child1, parent1, gpa 1, etc.)
+// - Add name and date fields to modals
+// - Better cropping/previewing experience (button somewhere else)
+// - Add name dynamically to card (centered) and to reference sheet
+    // - Card has full name, reference sheet has preferred first name and married last name (as default - maybe let them choose?)
+// - Make the save changes button work (don't add to reference sheet until they click save)
+// - Save images they use
+// - Save the state of the reference sheet
+// - Review game button after all info is in
+    // - we calculate timespans, update colors, add to cards, then show everything
+    // - check that a birth, marriage, and death happen in at least one time span (the same one)
+// - add to cart button after they review
+////////////////////////////////////////////
+
 window.addEventListener('DOMContentLoaded', e => {
     referenceCanvas()
 });
