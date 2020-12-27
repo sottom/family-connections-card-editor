@@ -12,6 +12,11 @@
 .cropper-view-box,
 .cropper-face {
     border-radius: 50%;
+    border: solid #791217 2px;
+}
+
+.cropper-modal {
+    opacity: .75;
 }
 
 canvas {
