@@ -1,7 +1,6 @@
 ////////////////////////////////////////////
 // TODOs
 ////////////////////////////////////////////
-// - Add "Click Me" text or blank image to blank portraits
 // - Maybe add names to each frame (child1, parent1, gpa 1, etc.)
 // - Add name and date fields to modals
 // - Better cropping/previewing experience (button somewhere else)
@@ -54,7 +53,6 @@ reference_canvas.addEventListener('click', (e) => {
         document.querySelector(`#imgInp${focusedFrame}`).addEventListener('change', e => {
             if(!e.target.files || !e.target.files[0]) return;
             file_type = e.target.files[0].type;
-            console.log(typeof(file_type), file_type)
             if(file_type.includes('video') || file_type.includes('audio')){
                 alert(`This is a ${file_type} file. Please upload an image file.`)
                 return;
@@ -149,11 +147,23 @@ function referenceCanvas() {
         })
 
         frames.forEach(frame => {
+            // add frame ellipse
             reference_context.fillStyle = frame.fillStyle;
             reference_context.fill(frame.ellipse);
+
+            // add filler text
+            reference_context.font = frame.text.size + " " + frame.text.font;
+            reference_context.fillStyle = colors.white;
+            reference_context.textAlign = "center";
+            reference_context.fillText(frame.text.text, frame.text.x, frame.text.y);
+
+            // add image
             if ('img' in frame.img) {
                 reference_context.drawImage(frame.img.img, frame.img.x, frame.img.y, frame.img.w, frame.img.h);
             }
+
+            // make namebox
+            reference_context.fillStyle = frame.fillStyle;
             roundRect(reference_context, frame.nameBox.x, frame.nameBox.y, frame.nameBox.w, frame.nameBox.h, frame.nameBox.radius, frame.nameBox.fill, frame.nameBox.stroke);
         })
     };
@@ -174,7 +184,6 @@ function addImgToReferenceSheet(cropped_img) {
         reference_context.drawImage(card_img, 0, 0);
 
         frames.forEach(frame => {
-            console.log(focusedFrame, frame.id)
             if (focusedFrame == frame.id) {
                 let img_resize_ratio = (frame.radiusX * 2 - 8) / cropped_img.width;
                 frame.img.img = cropped_img
@@ -289,7 +298,6 @@ function getCardPreview(cropper) {
     cardPreview(focusedFrame, cropped[0], cropped[1])
     document.querySelector(`#cropButton${focusedFrame}`).addEventListener('click', e => {
         cropped = getCrop(cropper)
-        console.log(focusedFrame)
         cardPreview(focusedFrame, cropped[0], cropped[1])
         addImgToReferenceSheet(cropped[0])
     })
@@ -326,21 +334,21 @@ function createCommonFrames() {
     let childX1 = 867;
 
     let frames = [
-        { x: gpaX1, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: gpa2X, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: gpa3X, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: gpa4X, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: gpa5X, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: gpa6X, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: gpa7X, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: gpa8X, y: gpaGenY, img: {}, nameBox: {}, },
-        { x: parentX1, y: parentGenY, img: {}, nameBox: {}, },
-        { x: parentX2, y: parentGenY, img: {}, nameBox: {}, },
-        { x: parentX3, y: parentGenY, img: {}, nameBox: {}, },
-        { x: parentX4, y: parentGenY, img: {}, nameBox: {}, },
-        { x: mainX1, y: mainGenY, img: {}, nameBox: {}, },
-        { x: mainX2, y: mainGenY, img: {}, nameBox: {}, },
-        { x: childX1, y: childGenY, img: {}, nameBox: {}, },
+        { x: gpaX1, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: gpa2X, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: gpa3X, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: gpa4X, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: gpa5X, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: gpa6X, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: gpa7X, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: gpa8X, y: gpaGenY, img: {}, nameBox: {}, text: {}, },
+        { x: parentX1, y: parentGenY, img: {}, nameBox: {}, text: {}, },
+        { x: parentX2, y: parentGenY, img: {}, nameBox: {}, text: {}, },
+        { x: parentX3, y: parentGenY, img: {}, nameBox: {}, text: {}, },
+        { x: parentX4, y: parentGenY, img: {}, nameBox: {}, text: {}, },
+        { x: mainX1, y: mainGenY, img: {}, nameBox: {}, text: {}, },
+        { x: mainX2, y: mainGenY, img: {}, nameBox: {}, text: {}, },
+        { x: childX1, y: childGenY, img: {}, nameBox: {}, text: {}, },
     ]
 
     frames.forEach((frame, i) => {
@@ -353,6 +361,13 @@ function createCommonFrames() {
         frame.startAngle = 0;
         frame.endAngle = 2 * Math.PI;
         frame.ellipse = new Path2D();
+
+        // get text position
+        frame.text.x = frame.x;
+        frame.text.y = frame.y;
+        frame.text.size = "40px";
+        frame.text.font = "Arial";
+        frame.text.text = "Click\nMe";
 
         // calculated
         frame.radiusY = frame.radiusX * frame.wtohRatio;
@@ -378,12 +393,10 @@ function createCommonFrames() {
 
 function previewUploadedImg(e) {
     var reader = new FileReader();
-    console.log(e.target.files[0])
     reader.onload = event => {
         document.querySelector(`#cropperImg${focusedFrame}`).src = event.target.result;
         document.querySelector(`#cropButton${focusedFrame}`).style.display = 'block';
         if (focusedFrame in croppers) {
-            console.log('replace')
             let cropper = croppers[focusedFrame];
             cropper.replace(event.target.result);
             getCardPreview(cropper);
@@ -391,7 +404,6 @@ function previewUploadedImg(e) {
         else {
             createCropper(`cropperImg${focusedFrame}`, 1 / 1.2568)
                 .then(cropper => {
-                    console.log('create')
                     croppers[focusedFrame] = cropper;
                     getCardPreview(cropper);
                 })
