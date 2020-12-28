@@ -5,13 +5,13 @@
 // - Add name and date fields to modals
 // - Better cropping/previewing experience (button somewhere else)
 // - Add name dynamically to card (centered) and to reference sheet
-    // - Card has full name, reference sheet has preferred first name and married last name (as default - maybe let them choose?)
+// - Card has full name, reference sheet has preferred first name and married last name (as default - maybe let them choose?)
 // - Make the save changes button work (don't add to reference sheet until they click save)
 // - Save images they use
 // - Save the state of the reference sheet
 // - Review game button after all info is in
-    // - we calculate timespans, update colors, add to cards, then show everything
-    // - check that a birth, marriage, and death happen in at least one time span (the same one)
+// - we calculate timespans, update colors, add to cards, then show everything
+// - check that a birth, marriage, and death happen in at least one time span (the same one)
 // - add to cart button after they review
 ////////////////////////////////////////////
 
@@ -28,13 +28,14 @@ let reference_canvas = document.querySelector("#canvas");
 let reference_context = reference_canvas.getContext("2d");
 let focusedFrame = null;
 let frames = createCommonFrames()
+let person_cards = createPersonCards(frames)
 
 ////////////////////////////////////////////
 // Main functionallity
 ////////////////////////////////////////////
 reference_canvas.addEventListener('click', (e) => {
     let { x, y } = getMousePos(reference_canvas, e);
-    for(let frame of frames) {
+    for (let frame of frames) {
         // only proceed with the correct frame
         if (!reference_context.isPointInPath(frame.ellipse, x, y)) continue;
 
@@ -46,19 +47,25 @@ reference_canvas.addEventListener('click', (e) => {
         $(`#${modalId}`).modal('show');
 
         // keep from making a listener every time a frame is clicked
-        if(focusedFrame in changeListeners) break;
+        if (focusedFrame in changeListeners) break;
         changeListeners.push(focusedFrame);
 
         // preview uploaded img
         document.querySelector(`#imgInp${focusedFrame}`).addEventListener('change', e => {
-            if(!e.target.files || !e.target.files[0]) return;
+            if (!e.target.files || !e.target.files[0]) return;
             file_type = e.target.files[0].type;
-            if(file_type.includes('video') || file_type.includes('audio')){
+            if (file_type.includes('video') || file_type.includes('audio')) {
                 alert(`This is a ${file_type} file. Please upload an image file.`)
                 return;
             }
             previewUploadedImg(e)
         });
+
+        document.querySelector(`#fname${focusedFrame}`).addEventListener('keyup', e => {
+            let pcard = person_cards[focusedFrame];
+            pcard.name.text = e.target.value;
+            cardPreview(focusedFrame, pcard.oval_img, pcard.circle_img)
+        })
     }
 });
 ////////////////////////////////////////////
@@ -80,6 +87,10 @@ reference_canvas.addEventListener('mousemove', (e) => {
 });
 
 function cardPreview(frame_id, cropped_img, cropped_img2) {
+    let pcard = person_cards[frame_id];
+    pcard.oval_img = cropped_img;
+    pcard.circle_img = cropped_img2;
+
     let card_canvas = document.querySelector(`#canvas-card${frame_id}`);
     let card_context = card_canvas.getContext("2d");
 
@@ -108,16 +119,15 @@ function cardPreview(frame_id, cropped_img, cropped_img2) {
             resize_ratio * cropped_img2.width, resize_ratio * cropped_img2.height
         );
 
+        drawCardNameBox(card_context)
 
-        card_context.beginPath();
-        card_context.fillStyle = colors.darkblue;
-        card_context.moveTo(153, 734);
-        card_context.quadraticCurveTo((665 + 153) / 2, 675, 665, 734);
-        card_context.lineTo(665, 803)
-        card_context.quadraticCurveTo((665 + 153) / 2, 862, 153, 803);
-        card_context.lineTo(153, 731)
-        card_context.fill()
-
+        if(pcard.name.text){
+            // add filler text
+            card_context.font = pcard.name.size + " " + pcard.name.font;
+            card_context.fillStyle = colors.white;
+            card_context.textAlign = "center";
+            card_context.fillText(pcard.name.text, pcard.name.x, pcard.name.y);
+        }
     };
 }
 
@@ -231,9 +241,18 @@ function addImgToReferenceSheet(cropped_img) {
         frames.forEach(frame => {
             reference_context.fillStyle = frame.fillStyle;
             reference_context.fill(frame.ellipse);
+
+            // add filler text
+            reference_context.font = frame.text.size + " " + frame.text.font;
+            reference_context.fillStyle = colors.white;
+            reference_context.textAlign = "center";
+            reference_context.fillText(frame.text.text, frame.text.x, frame.text.y);
+
             if ('img' in frame.img) {
                 reference_context.drawImage(frame.img.img, frame.img.x, frame.img.y, frame.img.w, frame.img.h);
             }
+
+            reference_context.fillStyle = colors.darkblue;
             roundRect(reference_context, frame.nameBox.x, frame.nameBox.y, frame.nameBox.w, frame.nameBox.h, frame.nameBox.radius, frame.nameBox.fill, frame.nameBox.stroke);
 
             // reference_context.beginPath()
@@ -280,6 +299,21 @@ function modalHtml(id) {
                             </div>
                             <div class="col-6">
                                 <canvas id="canvas-card${id}"></canvas>
+
+                                <label for="fname${id}" class="2 col-form-label">First Name</label>
+                                <input type="text" name="fname${id}" class="form-control-plaintext" id="fname${id}" >
+
+                                <label for="mname${id}" class="2 col-form-label">Middle Name</label>
+                                <input type="text" name="mname${id}" class="form-control-plaintext" id="mname${id}" >
+
+                                <label for="lname${id}" class="2 col-form-label">Last Name</label>
+                                <input type="text" name="lname${id}" class="form-control-plaintext" id="lname${id}" >
+
+                                <label for="maidenname${id}" class="2 col-form-label">Maiden Name</label>
+                                <input type="text" name="maidenname${id}" class="form-control-plaintext" id="maidenname${id}" >
+
+                                <label for="preferredname${id}" class="2 col-form-label">Preffered Name</label>
+                                <input type="text" name="preferredname${id}" class="form-control-plaintext" id="preferredname${id}" ></input>
                             </div>
                         </div>
                     </div>
@@ -477,3 +511,44 @@ function createCropper(id, aspectRatio) {
     })
 }
 
+function createPersonCards(oval_frames) {
+    let cards = {}
+    frames.forEach(frame => {
+        cards[frame.id] = {
+            oval_img: null,
+            circle_img: null,
+            name: {
+                x: frame.x + 200,
+                y: frame.y + 582,
+                text: null,
+                size: "45px",
+                font: "Arapey",
+            },
+            birthdate: null,
+            birthrange: null,
+            marriagedate: null,
+            marriagerange: null,
+            deathdate: null,
+            deathrange: null,
+
+            marriage2date: null,
+            marriage2range: null,
+
+            marriage3date: null,
+            marriage3range: null,
+        }
+    })
+    return cards;
+}
+
+
+function drawCardNameBox(card_context) {
+    card_context.beginPath();
+    card_context.fillStyle = colors.darkblue;
+    card_context.moveTo(153, 734);
+    card_context.quadraticCurveTo((665 + 153) / 2, 675, 665, 734);
+    card_context.lineTo(665, 803)
+    card_context.quadraticCurveTo((665 + 153) / 2, 862, 153, 803);
+    card_context.lineTo(153, 731)
+    card_context.fill()
+}
