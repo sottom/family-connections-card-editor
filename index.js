@@ -1,7 +1,8 @@
 ////////////////////////////////////////////
 // TODOs
 ////////////////////////////////////////////
-// - Add date fields to modals
+// - add circles with colors to all cards
+
 // - Better cropping/previewing experience (button somewhere else)
 // - Make the save changes button work
 
@@ -9,7 +10,6 @@
 // - Save images they use (img should have a link)
 
 // - Review game button after all info is in
-// - we calculate timespans, update colors, add to cards, then show everything
 // - check that a birth, marriage, and death happen in at least one time span (the same one) - see if challenge cards all work
 
 // - add to cart button after they review
@@ -19,8 +19,14 @@
 ////////////////////////////////////////////
 
 window.addEventListener('DOMContentLoaded', e => {
-    drawOriginalReferenceSheet()
+    drawReferenceSheet()
+    setInterval(() => {
+        if(readyForReview()){
+            calcTimeSpans()
+        }
+    }, 1000)
 });
+
 
 ////////////////////////////////////////////
 // Globals
@@ -31,9 +37,17 @@ let reference_canvas = document.querySelector("#canvas");
 let reference_context = reference_canvas.getContext("2d");
 let focusedPerson = null;
 let people = createCommonPeople()
+let date_ranges = []
+let range_colors = [
+    colors.purple,
+    colors.blue,
+    colors.green,
+    colors.yellow,
+    colors.red,
+]
 
 function createCommonPeople() {
-    // TODO: do this mathematically based on the width of the container (low priority)
+    // TODO: do this mathematically (eventually) based on the width of the container (low priority)
     let gpaGenY = 199;
     let gpaSpouseJump = 175;
     let gpaCoupleJump = 201;
@@ -81,7 +95,6 @@ function createCommonPeople() {
 
     for (let [pid, person] of Object.entries(peoples)) {
         // hard coded
-        console.log(1)
         person.fillStyle = colors.darkblue;
         person.radiusX = 86;
         person.wtohRatio = 1.2568
@@ -90,7 +103,6 @@ function createCommonPeople() {
         person.endAngle = 2 * Math.PI;
         person.ellipse = new Path2D();
 
-        console.log(2)
         // get text position
         person.fillerText.x = person.x;
         person.fillerText.y = person.y;
@@ -98,7 +110,6 @@ function createCommonPeople() {
         person.fillerText.font = "Arial";
         person.fillerText.text = "Click\nMe";
 
-        console.log(3)
         // calculated
         person.radiusY = person.radiusX * person.wtohRatio;
         person.center = {
@@ -107,8 +118,7 @@ function createCommonPeople() {
         }
         person.ellipse.ellipse(person.x, person.y, person.radiusX, person.radiusY, person.rotation, person.startAngle, person.endAngle)
 
-        console.log(4)
-        // TODO: get images for each person from online
+        // TODO: get images for each person from online, or save base64
 
         person.nameBox.w = person.radiusX * 2;
         person.nameBox.h = 70;
@@ -132,7 +142,6 @@ function createCommonPeople() {
             },
         }
 
-        console.log(5)
         person.card = {
             oval_img: null,
             circle_img: null,
@@ -156,7 +165,6 @@ function createCommonPeople() {
             marriage3date: null,
             marriage3range: null,
         }
-        console.log(6)
 
     }
     return peoples
@@ -202,9 +210,14 @@ reference_canvas.addEventListener('click', (e) => {
         document.querySelector(`#nameonrefsheet${focusedPerson}`).addEventListener('keyup', e => {
             // 13 letters per line
             let names = e.target.value.split(" ")
-            let split = Math.floor(names.length / 2);
-            person.nameBox.text.top.text = names.slice(0, split).join(" ");
-            person.nameBox.text.bottom.text = names.slice(split).join(" ");
+            if (names.length === 1) {
+                person.nameBox.text.top.text = names[0];
+            }
+            else {
+                let split = Math.floor(names.length / 2);
+                person.nameBox.text.top.text = names.slice(0, split).join(" ");
+                person.nameBox.text.bottom.text = names.slice(split).join(" ");
+            }
             drawReferenceSheet(person.img.img)
         })
 
@@ -274,7 +287,6 @@ function drawCard(person_id, cropped_img, cropped_img2) {
 
         drawCardNameBox(card_context)
 
-        console.log(person)
         if (person.card.name.text) {
             // add filler text
             card_context.font = person.card.name.size + " " + person.card.name.font;
@@ -282,58 +294,13 @@ function drawCard(person_id, cropped_img, cropped_img2) {
             card_context.textAlign = "center";
             card_context.fillText(person.card.name.text, person.card.name.x, person.card.name.y);
         }
-    };
-}
 
-function drawOriginalReferenceSheet() {
-    let card_img = new Image();
-    card_img.src = "img/4 gen reference sheet no frames.png"
-    card_img.onload = () => {
-        // increase the actual size of our canvas
-        reference_canvas.width = card_img.width * devicePixelRatio;
-        reference_canvas.height = card_img.height * devicePixelRatio;
-
-        // ensure all drawing operations are scaled
-        reference_context.scale(devicePixelRatio, devicePixelRatio);
-
-        reference_context.clearRect(0, 0, reference_canvas.width, reference_canvas.height);
-        reference_context.drawImage(card_img, 0, 0);
-
-        for (let [pid, person] of Object.entries(people)) {
-            if (focusedPerson == pid) {
-                let img_resize_ratio = (person.radiusX * 2 - 8) / cropped_img.width;
-                person.img.img = cropped_img
-                person.img.x = person.center.x + 4
-                person.img.y = person.center.y + 5
-                person.img.w = cropped_img.width * img_resize_ratio;
-                person.img.h = cropped_img.height * img_resize_ratio;
-            }
-        }
-
-        for (let [pid, person] of Object.entries(people)) {
-            // add person ellipse
-            reference_context.fillStyle = person.fillStyle;
-            reference_context.fill(person.ellipse);
-
-            // add filler text
-            reference_context.font = person.fillerText.size + " " + person.fillerText.font;
-            reference_context.fillStyle = colors.white;
-            reference_context.textAlign = "center";
-            reference_context.fillText(person.fillerText.text, person.fillerText.x, person.fillerText.y);
-
-            // add image
-            if ('img' in person.img) {
-                reference_context.drawImage(person.img.img, person.img.x, person.img.y, person.img.w, person.img.h);
-            }
-
-            // make namebox
-            reference_context.fillStyle = person.fillStyle;
-            roundRect(reference_context, person.nameBox.x, person.nameBox.y, person.nameBox.w, person.nameBox.h, person.nameBox.radius, person.nameBox.fill, person.nameBox.stroke);
+        if (person.card.birthrange) {
+            addCirclesToCard(person, card_context)
+            addDatesToCard(person, card_context)
         }
     };
 }
-
-
 
 function drawReferenceSheet(cropped_img) {
     let card_img = new Image();
@@ -389,6 +356,9 @@ function drawReferenceSheet(cropped_img) {
             // reference_context.lineTo(person.x, person.y - person.radiusY - 5)
             // reference_context.stroke()
 
+            if (person.card.birthrange) {
+                addCirclesToRefSheet(person)
+            }
         }
     };
 }
@@ -564,36 +534,298 @@ function drawCardNameBox(card_context) {
     card_context.fill();
 }
 
-        // reference_context.strokeStyle = colors.darkblue;
-        // reference_context.fillStyle = colors.darkblue;
-        // roundRect(reference_context, x, y + 175, 165, 50, 5, true);
+function readyForReview() {
+    return Object.values(people).every(person => {
+        return (
+            // namebox is filled out
+            person.nameBox.text.top.text &&  // don't need to check for bottom (they may choose to just put one name on the top)
 
-        // reference_context.font = "30px Arial";
-        // reference_context.fillStyle = colors.white;
-        // reference_context.fillText("Mitchell", x + 45, y + 195);
+            // card fields are filled out
+            person.card.oval_img &&
+            person.card.circle_img &&
+            person.card.name.text &&
+            person.card.birthdate
 
-        // reference_context.beginPath();
-        // reference_context.arc(x + 41, y + 246.2, 20, 0, 2 * Math.PI, false);
-        // reference_context.fillStyle = colors.red;
-        // reference_context.fill();
-        // reference_context.lineWidth = 1.5;
-        // reference_context.strokeStyle = colors.black;
-        // reference_context.stroke();
+            // don't need these necessarily
+            // person.card.marriagedate &&
+            // person.card.deathdate
+        )
+    })
+}
 
-        // reference_context.beginPath();
-        // reference_context.arc(x + 82, y + 246.2, 20, 0, 2 * Math.PI, false);
-        // reference_context.fillStyle = colors.yellow;
-        // reference_context.fill();
-        // reference_context.lineWidth = 1.5;
-        // reference_context.strokeStyle = colors.black;
-        // reference_context.stroke();
-        // reference_context.closePath();
+function calcTimeSpans() {
+    // make 5 groups
+    let birthdates = Object.values(people).map(person => person.card.birthdate.getFullYear())
+    let marriagedates = Object.values(people).map(person => person.card.marriagedate.getFullYear())
+    let deathdates = Object.values(people).map(person => person.card.deathdate.getFullYear())
+    let all_dates = birthdates + marriagedates + deathdates;
+    var maxDate = new Date(Math.max(all_dates));
+    var minDate = new Date(Math.min(all_dates));
+    maxDate = Math.ceil(maxDate / 5) * 5;
+    minDate = Math.floor(minDate / 5) * 5;
+    let range_size = (maxDate - minDate) / 5;
+    let date_ranges = [];
 
-        // reference_context.beginPath();
-        // reference_context.arc(x + 123, y + 246.2, 20, 0, 2 * Math.PI, false);
-        // reference_context.fillStyle = colors.green;
-        // reference_context.fill();
-        // reference_context.lineWidth = 1.5;
-        // reference_context.strokeStyle = colors.black;
-        // reference_context.stroke();
-        // reference_context.closePath();
+    let rangeStart, rangeEnd;
+    for (let i = 0; i < 5; i++) {
+        rangeStart = i === 0
+            ? minDate
+            : rangeEnd + 1
+        rangeEnd = i === 4
+            ? maxDate
+            : round5(rangeStart + range_size) - 1;
+        date_ranges.push({
+            start: rangeStart,
+            end: rangeEnd
+        })
+    }
+
+    addRangesToCards()
+
+    // TODO: drawDatesOnCards
+    // TODO: draw circles on cards
+    // TODO: draw circles on reference sheet
+}
+
+function addRangesToCards() {
+    Object.values(people).forEach(person => {
+        date_ranges.forEach((range, i) => {
+
+            let birthyear = person.card.birthdate.getFullYear()
+            if (birthyear >= range.start && birthyear <= range.end) {
+                person.card.birthrange = range_colors[i]
+            }
+
+            if(person.card.marriagedate){
+                let marriageyear = person.card.marriagedate.getFullYear()
+                if (marriagedate >= range.start && marriageyear <= range.end) {
+                    person.card.marriagerange = range_colors[i]
+                }
+            }
+
+            if(person.card.deathdate){
+                let deathyear = person.card.deathdate.getFullYear()
+                if (deathyear >= range.start && deathyear <= range.end) {
+                    person.card.deathrange = range_colors[i]
+                }
+            }
+        })
+    })
+}
+
+function round5(x) {
+    return (x % 5) >= 2.5 ? parseInt(x / 5) * 5 + 5 : parseInt(x / 5) * 5;
+}
+
+function addCirclesToRefSheet(person) {
+    // birth
+    reference_context.beginPath();
+    reference_context.arc(person.x - 41, person.y + person.radiusY + 41, 20, person.startAngle, person.endAngle);
+    reference_context.fillStyle = person.card.birthrange;
+    reference_context.fill();
+    reference_context.lineWidth = 1.5;
+    reference_context.strokeStyle = colors.black;
+    reference_context.stroke();
+
+    // marriage
+    if (person.card.marriagedate) {
+        reference_context.beginPath();
+        reference_context.arc(person.x, person.y + person.radiusY + 41, 20, person.startAngle, person.endAngle);
+        reference_context.fillStyle = person.card.marriagerange;
+        reference_context.fill();
+        reference_context.lineWidth = 1.5;
+        reference_context.strokeStyle = colors.black;
+        reference_context.stroke();
+        reference_context.closePath();
+    }
+
+    // death
+    if (person.card.deathdate) {
+        reference_context.beginPath();
+        reference_context.arc(person.x + 41, person.y + person.radiusY + 41, 20, person.startAngle, person.endAngle);
+        reference_context.fillStyle = person.card.deathrange;
+        reference_context.fill();
+        reference_context.lineWidth = 1.5;
+        reference_context.strokeStyle = colors.black;
+        reference_context.stroke();
+        reference_context.closePath();
+    }
+}
+
+function addCirclesToCard(person, card_context) {
+    let radius = 17
+    let y = 236
+
+    // birth
+    card_context.beginPath();
+    card_context.arc(151 - radius * 2, y, radius, person.startAngle, person.endAngle);
+    card_context.fillStyle = person.card.birthrange;
+    card_context.fill();
+    card_context.lineWidth = 1.5;
+    card_context.strokeStyle = colors.black;
+    card_context.stroke();
+
+    // marriage
+    if (person.card.marriagedate) {
+        card_context.beginPath();
+        card_context.arc(151, y, radius, person.startAngle, person.endAngle);
+        card_context.fillStyle = person.card.marriagerange;
+        card_context.fill();
+        card_context.lineWidth = 1.5;
+        card_context.strokeStyle = colors.black;
+        card_context.stroke();
+        card_context.closePath();
+    }
+
+    // death
+    if (person.card.deathdate) {
+        card_context.beginPath();
+        card_context.arc(151 + radius * 2, y, radius, person.startAngle, person.endAngle);
+        card_context.fillStyle = person.card.deathrange;
+        card_context.fill();
+        card_context.lineWidth = 1.5;
+        card_context.strokeStyle = colors.black;
+        card_context.stroke();
+        card_context.closePath();
+    }
+}
+
+function addDatesToCard(person, card_context) {
+    let marriageStartX = 358
+    let y = 886
+    let marriageEndX = 468
+    let radius = 50
+    let gutter = 13
+
+    let birthStartX = marriageStartX - (marriageEndX - marriageStartX) - radius * 2 - gutter;
+    let birthEndX = marriageEndX - (marriageEndX - marriageStartX) - radius * 2 - gutter;
+
+    let deathStartX = marriageStartX + (marriageEndX - marriageStartX) + radius * 2 + gutter;
+    let deathEndX = marriageEndX + (marriageEndX - marriageStartX) + radius * 2 + gutter;
+
+    card_context.fillStyle = person.card.birthrange;
+    card_context.strokeStyle = colors.black;
+    card_context.lineWidth = 4
+
+
+    // birth
+    card_context.beginPath();
+    card_context.arc(birthStartX, y + radius, radius, 1.5 * Math.PI, .5 * Math.PI, true)
+    card_context.fill();
+    card_context.stroke();
+
+    card_context.beginPath();
+    card_context.arc(birthEndX, y + radius, radius, 1.5 * Math.PI, .5 * Math.PI)
+    card_context.fill();
+    card_context.stroke();
+
+    card_context.beginPath();
+    card_context.rect(birthStartX, y, (marriageEndX - marriageStartX), radius * 2)
+    card_context.stroke();
+
+    let coverStrokeX = 2.5
+    let coverStrokeY = 2
+    card_context.beginPath();
+    card_context.rect(birthStartX - coverStrokeX, y + coverStrokeY, birthEndX - birthStartX + coverStrokeX * 2, radius * 2 - coverStrokeY * 2)
+    card_context.fill();
+
+    var birthicon = new Image();
+    birthicon.onload = function () {
+        card_context.drawImage(birthicon, birthStartX - radius / 1.5, y + radius / 2.4, radius + 10, radius + 10);
+    }
+    birthicon.src = "./img/birth.svg";
+
+    card_context.font = "900 58px Arapey";
+    card_context.fillStyle = colors.white;
+    card_context.textAlign = "center";
+    card_context.fillText(person.card.deathdate.getFullYear(), birthStartX + (birthEndX - birthStartX) / 1.3, y + radius);
+
+    card_context.font = "900 33px Arapey";
+    card_context.fillStyle = colors.white;
+    card_context.textAlign = "center";
+    let date = person.card.birthdate.toLocaleString('default', { month: 'short' }) +
+                person.card.birthdate.getDate();
+    card_context.fillText(date, birthStartX + (birthEndX - birthStartX) / 1.3, y + radius * 1.6);
+
+    // marriage
+    if (person.card.marriagerange) {
+
+        card_context.fillStyle = person.card.marriagerange;
+
+        card_context.beginPath();
+        card_context.arc(marriageStartX, y + radius, radius, 1.5 * Math.PI, .5 * Math.PI, true)
+        card_context.fill();
+        card_context.stroke();
+
+        card_context.beginPath();
+        card_context.arc(marriageEndX, y + radius, radius, 1.5 * Math.PI, .5 * Math.PI)
+        card_context.fill();
+        card_context.stroke();
+
+        card_context.beginPath();
+        card_context.rect(marriageStartX, y, marriageEndX - marriageStartX, radius * 2)
+        card_context.stroke();
+
+        card_context.beginPath();
+        card_context.rect(marriageStartX - coverStrokeX, y + coverStrokeY, marriageEndX - marriageStartX + coverStrokeX * 2, radius * 2 - coverStrokeY * 2)
+        card_context.fill();
+
+        var marriageicon = new Image();
+        marriageicon.onload = function () {
+            card_context.drawImage(marriageicon, marriageStartX - radius / 1.3, y + radius / 2.1, (radius + 5) * 800 / 650, radius + 5);
+        }
+        marriageicon.src = "./img/marriage.png";
+
+        card_context.font = "900 58px Arapey";
+        card_context.fillStyle = colors.white;
+        card_context.textAlign = "center";
+        card_context.fillText(person.card.marriagedate.getFullYear(), marriageStartX + (marriageEndX - marriageStartX) / 1.3, y + radius);
+
+        card_context.font = "900 33px Arapey";
+        card_context.fillStyle = colors.white;
+        card_context.textAlign = "center";
+        date = person.card.marriagedate.toLocaleString('default', { month: 'short' }) +
+                person.card.marriagedate.getDate();
+        card_context.fillText(date, marriageStartX + (marriageEndX - marriageStartX) / 1.3, y + radius * 1.6);
+    }
+
+    // death
+    if (person.card.deathrange) {
+        card_context.fillStyle = colors.red;
+        card_context.beginPath();
+        card_context.arc(deathStartX, y + radius, radius, 1.5 * Math.PI, .5 * Math.PI, true)
+        card_context.fill();
+        card_context.stroke();
+
+        card_context.beginPath();
+        card_context.arc(deathEndX, y + radius, radius, 1.5 * Math.PI, .5 * Math.PI)
+        card_context.fill();
+        card_context.stroke();
+
+        card_context.beginPath();
+        card_context.rect(deathStartX, y, (marriageEndX - marriageStartX), radius * 2)
+        card_context.stroke();
+
+        card_context.beginPath();
+        card_context.rect(deathStartX - coverStrokeX, y + coverStrokeY, deathEndX - deathStartX + coverStrokeX * 2, radius * 2 - coverStrokeY * 2)
+        card_context.fill();
+
+        var deathicon = new Image();
+        deathicon.onload = function () {
+            card_context.drawImage(deathicon, deathStartX - radius / 2, y + radius / 2.7, (radius + 11) * 556 / 800, radius + 11);
+        }
+        deathicon.src = "./img/death.png";
+
+        card_context.font = "900 58px Arapey";
+        card_context.fillStyle = colors.white;
+        card_context.textAlign = "center";
+        card_context.fillText(person.card.deathdate.getFullYear(), deathStartX + (deathEndX - deathStartX) / 1.3, y + radius);
+
+        card_context.font = "900 33px Arapey";
+        card_context.fillStyle = colors.white;
+        card_context.textAlign = "center";
+        date = person.card.deathdate.toLocaleString('default', { month: 'short' }) +
+                person.card.deathdate.getDate();
+        card_context.fillText(date, deathStartX + (deathEndX - deathStartX) / 1.3, y + radius * 1.6);
+    }
+}
